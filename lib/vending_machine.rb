@@ -41,6 +41,28 @@ class VendingMachine
     { product: product.name, change: change }
   end
 
+  def restock_coins(new_coins)
+    new_coins.each do |coin, qty|
+      raise ArgumentError, "Quantity must be non-negative" if qty < 0
+      @coin_inventory[coin] ||= 0
+      @coin_inventory[coin] += qty
+    end
+  end
+
+  def restock_products(new_products)
+    new_products.each do |new_product|
+      raise ArgumentError, "Stock must be non-negative" if new_product.stock < 0
+
+      existing = @products[new_product.id]
+
+      if existing
+        existing.stock += new_product.stock
+      else
+        @products[new_product.id] = new_product
+      end
+    end
+  end
+
   private
 
   def ensure_sufficient_funds!(product)

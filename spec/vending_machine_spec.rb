@@ -50,4 +50,39 @@ RSpec.describe VendingMachine do
     machine.insert_coin(200)
     expect { machine.select_product(1) }.to raise_error("Cannot return change")
   end
+
+  describe "restock_coins" do
+    it "adds coins to the existing inventory" do
+      expect {
+        machine.restock_coins({ 20 => 2, 10 => 1 })
+      }.to change { machine.instance_variable_get(:@coin_inventory)[20] }.by(2)
+    end
+
+    it "raises error for negative quantity" do
+      expect {
+        machine.restock_coins({ 20 => -1 })
+      }.to raise_error(ArgumentError, "Quantity must be non-negative")
+    end
+  end
+
+  describe "restock_products" do
+    it "increases stock for existing products" do
+      expect {
+        machine.restock_products([Product.new(id: 1, name: "Coke", price: 120, stock: 3)])
+      }.to change { machine.instance_variable_get(:@products)[1].stock }.by(3)
+    end
+
+    it "adds new products if they don’t exist" do
+      machine.restock_products([Product.new(id: 3, name: "Juice", price: 150, stock: 2)])
+      product = machine.instance_variable_get(:@products)[3]
+      expect(product.name).to eq("Juice")
+      expect(product.stock).to eq(2)
+    end
+
+    it "raises error for negative stock" do
+      expect {
+        machine.restock_products([Product.new(id: 4, name: "Tea", price: 80, stock: -1)])
+      }.to raise_error(ArgumentError, "Stock must be non-negative")
+    end
+  end
 end

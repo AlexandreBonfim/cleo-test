@@ -85,4 +85,30 @@ RSpec.describe VendingMachine do
       }.to raise_error(ArgumentError, "Stock must be non-negative")
     end
   end
+
+  describe "coin_inventory" do
+    it "returns a copy of the current coin inventory" do
+      machine.insert_coin(100)
+      inventory = machine.coin_inventory
+
+      expect(inventory).to eq({ 100 => 2, 20 => 1, 10 => 1, 2 => 2 }) # 100 was inserted once
+      expect(inventory).not_to be(machine.instance_variable_get(:@coin_inventory))
+    end
+  end
+
+  describe "product_inventory" do
+    it "returns a hash with product details and stock" do
+      inventory = machine.product_inventory
+
+      expect(inventory[1][:name]).to eq("Coke")
+      expect(inventory[1][:price]).to eq(120)
+      expect(inventory[1][:stock]).to eq(2)
+    end
+
+    it "does not expose the internal product objects directly" do
+      inventory = machine.product_inventory
+
+      expect(inventory[1]).not_to be(machine.instance_variable_get(:@products)[1])
+    end
+  end
 end

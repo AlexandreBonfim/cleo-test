@@ -2,28 +2,38 @@ require_relative 'change_calculator'
 require_relative 'product'
 
 class VendingMachine
-  def initialize(products:, change_calculator: ChangeCalculator.new)
+  def initialize(products:, coin_inventory:)
     @products = products.map { |p| [p.id, p] }.to_h
+    @coin_inventory = coin_inventory # { 100 => 2, 50 => 1, etc. }
     @inserted_amount = 0
-    @change_calculator = change_calculator
   end
 
   def insert_coin(value)
     raise ArgumentError, "Invalid coin" unless ChangeCalculator::COIN_DENOMINATIONS.include?(value)
+   
     @inserted_amount += value
+    @coin_inventory[value] ||= 0
+    @coin_inventory[value] += 1
   end
 
   def select_product(product_id)
     product = @products[product_id]
+  
     raise "Product not found" unless product
     raise "Out of stock" if product.stock.zero?
 
     ensure_sufficient_funds!(product)
 
     change_amount = @inserted_amount - product.price
-    change = @change_calculator.calculate(change_amount)
+    calculator = ChangeCalculator.new_with_inventory(@coin_inventory)
+    change = calculator.calculate(change_amount)
 
     raise "Cannot return change" unless change
+
+    # Deduct coins used for change
+    change.each do |coin|
+      @coin_inventory[coin] -= 1
+    end
 
     product.stock -= 1
     @inserted_amount = 0

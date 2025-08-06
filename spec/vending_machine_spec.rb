@@ -8,8 +8,9 @@ RSpec.describe VendingMachine do
       Product.new(id: 2, name: "Water", price: 90, stock: 0)
     ]
   end
+  let(:coin_inventory) { { 100 => 1, 20 => 1, 10 =>1 , 2 => 2 } }
 
-  subject(:machine) { described_class.new(products: products) }
+  subject(:machine) { described_class.new(products: products, coin_inventory: coin_inventory) }
 
   it "completes a purchase and returns correct change" do
     machine.insert_coin(100)
@@ -43,5 +44,10 @@ RSpec.describe VendingMachine do
     expect {
       machine.select_product(1)
     }.to raise_error("Insufficient funds: please insert 20p more")
+  end
+
+   it "raises if not enough coins to make change" do
+    machine.insert_coin(200)
+    expect { machine.select_product(1) }.to raise_error("Cannot return change")
   end
 end
